@@ -11,6 +11,7 @@ Data cleaning is applied to standardise the addresses and remove Address base co
 The USRN dataset is reduced , cleaned, filtered for relevant roads to remove slip roads, motorways and other things like roundabouts footpaths and cycleways etc. Next Street abbrevation words file is read in and joined on the basis of street type. Eg avenue or road are street types and the associated abbreviation are rd and ave.
 We generate a record for the full street types and any associated abbreviations again to help with joining later. We join this USRN dataset simply to the Address base dataset using the USRN held both sides as the key. All this goes up to the SQL table and further variables are derived on the way.
 Resultant Address base table:
+
 Name	Type	Description
 UPRN	VARCHAR2(14)	Most unique key - not unique due to street descriptions being mulitplied due to abbreviations
 PARENT_UPRN	VARCHAR2(14)	UPRN or Parent_UPRN if present
@@ -65,6 +66,7 @@ WORD_EIGHT	VARCHAR2(250)
 POINT	PUBLIC.SDO_GEOMETRY	in development
 
 Incoming data:
+
 One of 2 r scripts can be used to get incoming addressing into a similar state / assign equivalent features as above. 2 flavours of this exist one for CHI addressing one for Care inspectorate data. Inn addition areas of neighbouring tiles are defined for increasing search from a given centroid.
 CHI ADDRESSING: PRE_PROCESS_CHI_ADDRESSING_CREATE_SQL_TABLE_FOR SEEDING.R"
 Care inspectorate: PRE_PROCESS_CARE.R
@@ -72,10 +74,11 @@ So Differences are Postcode centroids derived from supplied postcodes are used t
 Other than that the objective is to get comparable variables where possible form each string as we got from the Address base file. THEN the data goes the SQL table space.
 
 SEEDING.
+
 Written using PL SQL. This was chosen for scalability mainly. 
 Use either : 
-\\chi\Martin\address_matching\add_matching_CH2.sql
-\\chi\Martin\address_matching\add_matching_GP2.sql
+add_matching_CH2.sql
+add_matching_GP2.sql
 The approach is to generate a set of potential pairs in a temp table and then filter that table based on score and uniqueness of match to accept a certain subset of matches. Any accepted matches are then deleted from the incoming table being used for this exercise (another original can be kept) . By deleting accepted matches it avoids A finding the match again, reduces the size of the problem and allow us to go from most strict to less in match key hierarchy without letting in loads of false positives. These iterations of many match keys attempt to account for typical variations in incoming versus reference addressing.
 Each iterations logic needs writing down and checking if it is in the optimal order, typically string searching and string distance metrics are combined with spatial proximity using the H3 tile hierarchy. Soundex, key word searching are also used in the care home script.
 So a set of accepted matches are accumulated as a series of tables which are assigned a stage key for future traceability. These tables then are bought together by a UNION query and this holds the result. 
